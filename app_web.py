@@ -8,7 +8,7 @@ st.set_page_config(page_title="Control de Filamentos 3D", page_icon="🧵", layo
 # Conexión solo para LEER los datos actualizados
 conn = st.connection("gsheets", type=GSheetsConnection)
 
-# PEGA ACÁ TU URL COPIADA DE APPS SCRIPT
+https://docs.google.com/spreadsheets/d/1KuR42XikETXICK7tPtTu0HYjcqimlXt0mqub4kZ701U/edit?usp=sharing
 URL_SCRIPT = "PEGA_ACA_TU_URL_DE_APP_WEB"
 
 st.title("🧵 Control de Filamentos 3D")
