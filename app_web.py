@@ -1,15 +1,19 @@
 import streamlit as st
 import pandas as pd
+import requests
 from streamlit_gsheets import GSheetsConnection
 
 st.set_page_config(page_title="Control de Filamentos 3D", page_icon="🧵", layout="wide")
 
 conn = st.connection("gsheets", type=GSheetsConnection)
 
+
+URL_SCRIPT = "https://script.google.com/macros/s/AKfycbxrpvcw9yX10yZYF-kcRcVXs9rWk9MIHlsTd2BUV40McudgK0TjPFQmrGiwdiHJAXenpw/exec"
+
 st.title("🧵 Control de Filamentos 3D")
 st.caption("Inventario sincronizado en tiempo real")
 
-# Formulario para agregar / actualizar rollos
+# Formulario para agregar / actualizar
 with st.form("form_filamento", clear_on_submit=True):
     col1, col2 = st.columns(2)
     with col1:
@@ -26,37 +30,27 @@ if btn_guardar:
     if not caja_id:
         st.error("Por favor completa el N° de Caja / ID.")
     else:
+        payload = {
+            "action": "save",
+            "id": caja_id,
+            "marca": marca,
+            "material": material,
+            "color": color,
+            "gramos": gramos
+        }
         try:
-            df_actual = conn.read(ttl=0)
-            
-            # Convertir IDs a texto para comparar bien
-            caja_id_str = str(caja_id).strip()
-            df_actual['ID'] = df_actual['ID'].astype(str).str.strip()
-            
-            # Si el ID ya existe, lo actualiza. Si no existe, crea la fila nueva
-            if caja_id_str in df_actual['ID'].values:
-                idx = df_actual[df_actual['ID'] == caja_id_str].index[0]
-                df_actual.loc[idx, ['Marca', 'Material', 'Color', 'Gramos']] = [marca, material, color, gramos]
+            res = requests.post(URL_SCRIPT, json=payload, allow_redirects=True)
+            if res.status_code == 200:
+                st.success(f"¡Rollo {caja_id} procesado correctamente!")
+                st.cache_data.clear()
             else:
-                nueva_fila = pd.DataFrame([{
-                    "ID": caja_id_str,
-                    "Marca": marca,
-                    "Material": material,
-                    "Color": color,
-                    "Gramos": gramos
-                }])
-                df_actual = pd.concat([df_actual, nueva_fila], ignore_index=True)
-            
-            # Escribir la planilla actualizada
-            conn.update(data=df_actual)
-            st.success(f"¡Rollo {caja_id} guardado correctamente!")
-            st.cache_data.clear()
+                st.error(f"Error {res.status_code}: {res.text}")
         except Exception as err:
-            st.error(f"Error al guardar: {err}")
+            st.error(f"Error de conexión: {err}")
 
 st.divider()
 
-# Sección para borrar rollos
+# Sección para eliminar rollos
 with st.expander("🗑️ Eliminar un rollo del inventario"):
     id_eliminar = st.text_input("Ingresá el N° de Caja / ID a borrar")
     btn_borrar = st.button("❌ Eliminar rollo")
@@ -65,20 +59,16 @@ with st.expander("🗑️ Eliminar un rollo del inventario"):
         if not id_eliminar:
             st.warning("Escribí el ID del rollo que querés borrar.")
         else:
+            payload = {"action": "delete", "id": id_eliminar}
             try:
-                df_actual = conn.read(ttl=0)
-                id_del_str = str(id_eliminar).strip()
-                df_actual['ID'] = df_actual['ID'].astype(str).str.strip()
-                
-                if id_del_str in df_actual['ID'].values:
-                    df_nuevo = df_actual[df_actual['ID'] != id_del_str]
-                    conn.update(data=df_nuevo)
-                    st.success(f"¡Rollo {id_eliminar} eliminado correctamente!")
+                res = requests.post(URL_SCRIPT, json=payload, allow_redirects=True)
+                if res.status_code == 200:
+                    st.success(f"¡Rollo {id_eliminar} eliminado de la planilla!")
                     st.cache_data.clear()
                 else:
-                    st.warning(f"No se encontró el rollo con ID: {id_eliminar}")
+                    st.error(f"Error al eliminar: {res.text}")
             except Exception as err:
-                st.error(f"Error al eliminar: {err}")
+                st.error(f"Error de conexión: {err}")
 
 st.divider()
 
