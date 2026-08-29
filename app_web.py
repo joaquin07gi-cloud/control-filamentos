@@ -30,7 +30,6 @@ if btn_guardar:
     if not caja_id:
         st.error("Por favor completa el N° de Caja / ID.")
     else:
-        # Enviar datos a Google Sheets por Apps Script
         payload = {
             "id": caja_id,
             "marca": marca,
@@ -38,21 +37,22 @@ if btn_guardar:
             "color": color,
             "gramos": gramos
         }
-        res = requests.post(URL_SCRIPT, json=payload)
-        
-        if res.status_code == 200:
-            st.success(f"¡Rollo {caja_id} guardado correctamente en la planilla!")
-            st.cache_data.clear() # Limpia la cache para refrescar la lista
-        else:
-            st.error("Ocurrió un error al guardar en la planilla.")
+        try:
+            res = requests.post(URL_SCRIPT, json=payload, allow_redirects=True)
+            if res.status_code == 200:
+                st.success(f"¡Rollo {caja_id} guardado correctamente en la planilla!")
+                st.cache_data.clear()
+            else:
+                st.error(f"Error {res.status_code}: {res.text}")
+        except Exception as err:
+            st.error(f"Error de conexión: {err}")
 
 st.divider()
 
 # Mostrar inventario actual
 st.subheader("📋 Inventario Actual")
 try:
-    df = conn.read(ttl="5s") # Se actualiza casi al instante
+    df = conn.read(ttl="5s")
     st.dataframe(df, use_container_width=True)
 except Exception as e:
     st.info("Cargá tu primer rollo arriba para ver el inventario.")
-  
