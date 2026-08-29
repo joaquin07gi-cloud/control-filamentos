@@ -8,7 +8,7 @@ st.set_page_config(page_title="Control de Filamentos 3D", page_icon="🧵", layo
 # Conexión solo para LEER los datos actualizados
 conn = st.connection("gsheets", type=GSheetsConnection)
 
-URL_SCRIPT = "https://script.google.com/macros/s/AKfycbxrpvcw9yX10yZYF-kcRcVXs9rWk9MIHlsTd2BUV40McudgK0TjPFQmrGiwdiHJAXenpw/exec"
+URL_SCRIPT = "https://script.google.com/macros/s/AKfycbxrpvcw9yX10yZYF-kcRcVXs9rWk9MIHlsTd2BUV4OMcudgK0TjPFQmrGiwdiHJAXenpw/exec"
 
 st.title("🧵 Control de Filamentos 3D")
 st.caption("Inventario sincronizado en tiempo real")
@@ -51,8 +51,12 @@ st.divider()
 
 # Mostrar inventario actual
 st.subheader("📋 Inventario Actual")
+
+if st.button("🔄 Actualizar tabla"):
+    st.cache_data.clear()
+
 try:
-    df = conn.read(ttl="5s")
+    df = conn.read(ttl=0)
     st.dataframe(df, use_container_width=True)
 except Exception as e:
-    st.info("Cargá tu primer rollo arriba para ver el inventario.")
+    st.error(f"Error al leer la planilla: {e}")
