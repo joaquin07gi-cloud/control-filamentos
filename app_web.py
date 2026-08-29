@@ -5,15 +5,14 @@ from streamlit_gsheets import GSheetsConnection
 
 st.set_page_config(page_title="Control de Filamentos 3D", page_icon="🧵", layout="wide")
 
-# Conexión solo para LEER los datos actualizados
 conn = st.connection("gsheets", type=GSheetsConnection)
 
-URL_SCRIPT = "https://script.google.com/macros/s/AKfycbxrpvcw9yX10yZYF-kcRcVXs9rWk9MIHlsTd2BUV40McudgK0TjPFQmrGiwdiHJAXenpw/exec"
+URL_SCRIPT = "https://script.google.com/macros/s/AKfycbxrpvcw9yX10yZYF-kcRcVXs9rWk9MIHlsTd2BUV4OMcudgK0TjPFQmrGiwdiHJAXenpw/exec"
 
 st.title("🧵 Control de Filamentos 3D")
 st.caption("Inventario sincronizado en tiempo real")
 
-# Formulario para registrar/actualizar rollos
+# Formulario para agregar / actualizar
 with st.form("form_filamento", clear_on_submit=True):
     col1, col2 = st.columns(2)
     with col1:
@@ -31,6 +30,7 @@ if btn_guardar:
         st.error("Por favor completa el N° de Caja / ID.")
     else:
         payload = {
+            "action": "save",
             "id": caja_id,
             "marca": marca,
             "material": material,
@@ -40,12 +40,34 @@ if btn_guardar:
         try:
             res = requests.post(URL_SCRIPT, json=payload, allow_redirects=True)
             if res.status_code == 200:
-                st.success(f"¡Rollo {caja_id} guardado correctamente en la planilla!")
+                st.success(f"¡Rollo {caja_id} procesado correctamente!")
                 st.cache_data.clear()
             else:
                 st.error(f"Error {res.status_code}: {res.text}")
         except Exception as err:
             st.error(f"Error de conexión: {err}")
+
+st.divider()
+
+# Sección para eliminar rollos
+with st.expander("🗑️ Eliminar un rollo del inventario"):
+    id_eliminar = st.text_input("Ingresá el N° de Caja / ID a borrar")
+    btn_borrar = st.button("❌ Eliminar rollo")
+    
+    if btn_borrar:
+        if not id_eliminar:
+            st.warning("Escribí el ID del rollo que querés borrar.")
+        else:
+            payload = {"action": "delete", "id": id_eliminar}
+            try:
+                res = requests.post(URL_SCRIPT, json=payload, allow_redirects=True)
+                if res.status_code == 200:
+                    st.success(f"¡Rollo {id_eliminar} eliminado de la planilla!")
+                    st.cache_data.clear()
+                else:
+                    st.error(f"Error al eliminar: {res.text}")
+            except Exception as err:
+                st.error(f"Error de conexión: {err}")
 
 st.divider()
 
