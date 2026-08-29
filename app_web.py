@@ -9,7 +9,6 @@ st.set_page_config(page_title="Control de Filamentos 3D", page_icon="🧵", layo
 conn = st.connection("gsheets", type=GSheetsConnection)
 
 URL_SCRIPT = "https://script.google.com/macros/s/AKfycbxrpvcw9yX10yZYF-kcRcVXs9rWk9MIHlsTd2BUV4OMcudgK0TjPFQmrGiwdiHJAXenpw/exec"
-URL_SCRIPT = "PEGA_ACA_TU_URL_DE_APP_WEB"
 
 st.title("🧵 Control de Filamentos 3D")
 st.caption("Inventario sincronizado en tiempo real")
